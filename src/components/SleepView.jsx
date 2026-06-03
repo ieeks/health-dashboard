@@ -28,7 +28,7 @@ function Reveal({ i = 0, children }) {
   )
 }
 
-export function SleepView() {
+export function SleepView({ onBack }) {
   const { theme, toggle } = useTheme()
   const { loading, error, night, avg30 } = useSleepNight()
   const { notes, saveNote } = useWakeNotes(night?.date ?? null)
@@ -62,7 +62,17 @@ export function SleepView() {
         <Reveal i={0}>
           <div className="sv-hd">
             <div className="nav">
-              <span>{SUMMARY.dateLabel}</span>
+              {onBack ? (
+                <button className="sv-back" onClick={onBack} aria-label="Zurück zur Übersicht">
+                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" stroke="currentColor"
+                    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="10,2 5,7.5 10,13" />
+                  </svg>
+                  Übersicht
+                </button>
+              ) : (
+                <span>{SUMMARY.dateLabel}</span>
+              )}
               <ThemeToggle theme={theme} onToggle={toggle} />
             </div>
             <div className="range">

@@ -354,6 +354,18 @@
 }
 .sv-error { color: var(--warm); }
 
+/* ── Back Button (V2 nav) ───────────────────────────────────── */
+.sv-back {
+  display: flex; align-items: center; gap: 5px;
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-body); font-size: 13px; font-weight: 500;
+  color: var(--ink-2); padding: 0;
+  transition: color .15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.sv-back:hover { color: var(--cyan); }
+.sv-back svg { flex: none; }
+
 /* ── Theme Toggle ───────────────────────────────────────────── */
 .sv-hd .nav {
   display: flex;
