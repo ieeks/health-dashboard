@@ -168,24 +168,24 @@ async function fetchSleepDataPoints(accessToken) {
 // ── Step C: Fetch one Activity DataType (graceful — returns null on error) ───
 
 async function fetchActivityType(accessToken, dataType) {
-  const since = new Date(Date.now() - SYNC_DAYS * 24 * 60 * 60 * 1000).toISOString()
+  // No date filter — activity endpoints use different filter syntax than sleep.
+  // We fetch the latest 25 points and filter by date client-side.
   const url = new URL(`${HEALTH_BASE}/${dataType}/dataPoints`)
   url.searchParams.set('pageSize', '25')
-  url.searchParams.set('filter', `interval.end_time >= "${since}"`)
 
   try {
     const res = await fetch(url.toString(), {
       headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
     })
 
-    if (res.status === 404 || res.status === 400 || res.status === 403) {
+    if (res.status === 404 || res.status === 403) {
       console.log(`  ℹ ${dataType}: nicht verfügbar (HTTP ${res.status})`)
       return null
     }
 
     if (!res.ok) {
       const body = await res.text()
-      console.warn(`  ⚠ ${dataType}: Fehler ${res.status} — ${body.slice(0, 120)}`)
+      console.warn(`  ⚠ ${dataType}: Fehler ${res.status} — ${body.slice(0, 200)}`)
       return null
     }
 
