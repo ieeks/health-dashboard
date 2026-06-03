@@ -38,33 +38,22 @@ const RETRY_DELAY_MS = 2000
 // (the correct one will be confirmed at first run; failures are logged + skipped).
 // DataType strings confirmed by live API responses.
 // 400 "Invalid data type ID" = wrong name; 403 = scope missing; 404 = not found.
+// DataType strings confirmed by live API responses (2026-06-03):
+//   ✓ steps      → steps.count (string)       — from HEALTH_KIT (iPhone)
+//   ✓ distance   → distance.millimeters (str) — from HEALTH_KIT (iPhone)
+//   ✗ everything else → 400 "Invalid data type ID" (Fitbit doesn't sync these to Health Connect)
+// Keeping a few extras in case a re-auth with health_metrics scope unlocks them.
 const ACTIVITY_TYPES = [
-  // ✓ Confirmed working
   'steps',
   'distance',
-  // Calories variants (Health Connect uses total vs active)
-  'total_calories_burned',
-  'active_calories_burned',
-  // Heart rate
-  'heart_rate',
   'resting_heart_rate',
-  // HRV
   'heart_rate_variability_rmssd',
-  // Vitals (needs health_metrics scope)
   'oxygen_saturation',
   'respiratory_rate',
-  'skin_temperature',            // without _deviation
-  'skin_temperature_deviation',
-  // Activity minutes
-  'exercise_session',
-  'active_zone_minutes',
+  'skin_temperature',
 ]
 
-// Alias → canonical Firestore field (first successful write wins)
-const TYPE_ALIASES = {
-  'active_calories_burned': 'total_calories_burned',
-  'heart_rate':             'resting_heart_rate',      // fallback if resting not available
-}
+const TYPE_ALIASES = {}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -199,13 +188,6 @@ async function fetchActivityType(accessToken, dataType) {
     const points = data.dataPoints || []
     console.log(`  ✓ ${dataType}: ${points.length} DataPoints`)
     // Log first point structure to validate field names (first run only)
-    if (points.length > 0) {
-      // Log the type-specific sub-object (skip interval/civil times to see value fields)
-      const p = points[0]
-      const typeData = p[dataType] || p
-      const { interval, civilStartTime, civilEndTime, ...rest } = typeData
-      console.log(`    platform: ${p.dataSource?.platform}, fields: ${JSON.stringify(rest)}`)
-    }
     return points
   } catch (err) {
     console.warn(`  ⚠ ${dataType}: Netzwerkfehler — ${err.message}`)
@@ -214,36 +196,33 @@ async function fetchActivityType(accessToken, dataType) {
 }
 
 // ── Step D: Parse a single activity dataPoint value ──────────────────────────
-// Google Health dataPoints may carry values in different fields depending on type.
-// We try common field names; the correct one is confirmed when live data arrives.
+// Field names confirmed by live API sample (2026-06-03):
+//   steps.count        = "2"    (string integer)
+//   distance.millimeters = "1503" (string, needs /1000 for meters)
 
 function extractValue(dataPoint, dataType) {
   if (!dataPoint) return null
-
-  // Try top-level value fields (common pattern)
   const d = dataPoint[dataType] || dataPoint
 
-  // Numeric fields to probe (covers known patterns)
-  const candidates = [
-    d?.count,
-    d?.value,
-    d?.kcal,
-    d?.minutes,
-    d?.meters,
-    d?.bpm,
-    d?.rmssd,
-    d?.percentage,
-    d?.breaths_per_minute,
-    d?.deviation,
-  ]
+  // Confirmed fields first
+  if (d.count       != null) return parseFloat(d.count)
+  if (d.millimeters != null) return parseFloat(d.millimeters) / 1000   // mm → m
+  // Speculative fields for types not yet confirmed
+  if (d.bpm         != null) return parseFloat(d.bpm)
+  if (d.rmssd       != null) return parseFloat(d.rmssd)
+  if (d.percentage  != null) return parseFloat(d.percentage)
+  if (d.breaths_per_minute != null) return parseFloat(d.breaths_per_minute)
+  if (d.deviation   != null) return parseFloat(d.deviation)
+  if (d.kcal        != null) return parseFloat(d.kcal)
+  if (d.meters      != null) return parseFloat(d.meters)
+  if (d.value       != null) return parseFloat(d.value)
 
-  for (const c of candidates) {
-    if (c != null && !isNaN(Number(c))) return Number(c)
+  // Fallback: first parseable leaf
+  for (const v of Object.values(d || {})) {
+    const n = parseFloat(v)
+    if (!isNaN(n)) return n
   }
-
-  // Fallback: first numeric leaf in the object
-  const vals = Object.values(d || {}).filter(v => typeof v === 'number')
-  return vals.length > 0 ? vals[0] : null
+  return null
 }
 
 // ── Step E: Aggregate activity dataPoints for a given date ───────────────────
