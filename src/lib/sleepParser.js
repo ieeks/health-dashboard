@@ -2,26 +2,29 @@
  * sleepParser.js
  * Converts a Firestore sleep doc → component-ready data model.
  *
- * Timezone note: The Google Health API (via Fitbit) returns times in ISO-8601 with Z,
- * but the actual values are local wall-clock times (known Fitbit/Google Health quirk).
- * We therefore treat the Z-timestamp directly as local time display.
+ * Timezone: Times in Firestore are UTC (Z). Local wall-clock = UTC + utcOffset (seconds).
+ * Verified: user confirmed display was 2h behind → offset must be added.
+ * utcOffset is stored as number (seconds) in Firestore, e.g. 7200 = CEST (+02:00).
  */
 
 const WINDOW_BASE_HOUR = 18 // Times before 18:00 are assumed to be next calendar day
 
-/** Parse "HH:MM:SS" or "2026-05-29T22:32:00Z" → absolute minutes, cross-midnight aware */
-function absMin(isoOrClock) {
-  const m = isoOrClock.match(/T?(\d{2}):(\d{2}):?(\d{2})?/)
-  if (!m) return 0
-  let min = parseInt(m[1], 10) * 60 + parseInt(m[2], 10) + (m[3] ? parseInt(m[3], 10) / 60 : 0)
-  if (min < WINDOW_BASE_HOUR * 60) min += 24 * 60 // after midnight → add one day
+/** UTC ISO string + offset in seconds → absolute local minutes, cross-midnight aware */
+function absMin(isoString, offsetSeconds = 0) {
+  const localMs = new Date(isoString).getTime() + offsetSeconds * 1000
+  const d = new Date(localMs)
+  let min = d.getUTCHours() * 60 + d.getUTCMinutes() + d.getUTCSeconds() / 60
+  if (min < WINDOW_BASE_HOUR * 60) min += 24 * 60
   return min
 }
 
-/** Extract "HH:MM" display clock from ISO string */
-function toClock(isoString) {
-  const m = isoString.match(/T(\d{2}):(\d{2})/)
-  return m ? `${m[1]}:${m[2]}` : '--:--'
+/** UTC ISO string + offset in seconds → "HH:MM" local display clock */
+function toClock(isoString, offsetSeconds = 0) {
+  const localMs = new Date(isoString).getTime() + offsetSeconds * 1000
+  const d = new Date(localMs)
+  const h = String(d.getUTCHours()).padStart(2, '0')
+  const m = String(d.getUTCMinutes()).padStart(2, '0')
+  return `${h}:${m}`
 }
 
 /** Absolute minutes → "HH:MM" display */
@@ -51,8 +54,11 @@ export function fmtHMshort(min) {
 export function parseSleepDoc(doc) {
   const { interval, summary, stages, date } = doc
 
-  // Build dynamic window from actual stage times
-  const allAbsMin = stages.flatMap(s => [absMin(s.startTime), absMin(s.endTime)])
+  // UTC offset in seconds — same for all stages in a night (e.g. 7200 = CEST +02:00)
+  const offset = interval.startUtcOffset ?? 0
+
+  // Build dynamic window from actual stage times (local)
+  const allAbsMin = stages.flatMap(s => [absMin(s.startTime, offset), absMin(s.endTime, offset)])
   const minTime = Math.min(...allAbsMin)
   const maxTime = Math.max(...allAbsMin)
 
@@ -62,18 +68,18 @@ export function parseSleepDoc(doc) {
   const SPAN = windowEnd - windowStart
 
   function toWindowMin(isoString) {
-    return absMin(isoString) - windowStart
+    return absMin(isoString, offset) - windowStart
   }
 
   // Segments — lowercase types to match CSS classes and PH keys
   const SEGMENTS = stages.map(s => ({
-    type:       s.type.toLowerCase(),           // 'awake' | 'light' | 'deep' | 'rem'
+    type:       s.type.toLowerCase(),
     startTime:  s.startTime,                    // ISO string — used as wakeNote Firestore key
-    startClock: toClock(s.startTime),
-    endClock:   toClock(s.endTime),
-    start:      toWindowMin(s.startTime),       // minutes from window start
+    startClock: toClock(s.startTime, offset),
+    endClock:   toClock(s.endTime, offset),
+    start:      toWindowMin(s.startTime),
     end:        toWindowMin(s.endTime),
-    dur:        absMin(s.endTime) - absMin(s.startTime),
+    dur:        absMin(s.endTime, offset) - absMin(s.startTime, offset),
   }))
 
   // Wake phases (all AWAKE segments), key = ISO startTime for Firestore
@@ -97,7 +103,7 @@ export function parseSleepDoc(doc) {
   const fallAsleepMin = (summary.minutesToFallAsleep > 0)
     ? summary.minutesToFallAsleep
     : (firstStage.type === 'AWAKE'
-        ? Math.round(absMin(firstStage.endTime) - absMin(firstStage.startTime))
+        ? Math.round(absMin(firstStage.endTime, offset) - absMin(firstStage.startTime, offset))
         : 0)
 
   const efficiency = Math.floor((summary.minutesAsleep / summary.minutesInSleepPeriod) * 100)
@@ -124,8 +130,8 @@ export function parseSleepDoc(doc) {
 
   const SUMMARY = {
     dateLabel,
-    startClock:    toClock(interval.startTime),
-    endClock:      toClock(interval.endTime),
+    startClock:    toClock(interval.startTime, offset),
+    endClock:      toClock(interval.endTime, offset),
     inBedMin:      summary.minutesInSleepPeriod,
     asleepMin:     summary.minutesAsleep,
     awakeMin:      summary.minutesAwake,
