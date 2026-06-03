@@ -1,28 +1,26 @@
 import { useSleepNight } from '../hooks/useSleepNight'
 import { useWakeNotes } from '../hooks/useWakeNotes'
+import { useTheme } from '../hooks/useTheme'
 import { fmtHM } from '../lib/sleepParser'
 import { ScoreCard } from './ScoreCard'
 import { Hypnogram } from './Hypnogram'
 import { WakeList } from './WakeList'
 import { Distribution } from './Distribution'
+import { ThemeToggle } from './ThemeToggle'
+import { LoadingSkeleton } from './LoadingSkeleton'
 
 function Reveal({ i = 0, children }) {
-  // CSS-driven reveal with staggered delay via inline style
   return (
     <div
       className="reveal"
-      style={{
-        transitionDelay: `${i * 0.09}s`,
-        // Initially hidden via JS, CSS class toggles after mount
-      }}
+      style={{ transitionDelay: `${i * 0.09}s` }}
       ref={el => {
         if (!el) return
-        // Two-frame trick for CSS transition
+        el.classList.add('hidden')
         requestAnimationFrame(() => requestAnimationFrame(() => {
           el.classList.remove('hidden')
           el.classList.add('visible')
         }))
-        el.classList.add('hidden')
       }}
     >
       {children}
@@ -31,17 +29,11 @@ function Reveal({ i = 0, children }) {
 }
 
 export function SleepView() {
+  const { theme, toggle } = useTheme()
   const { loading, error, night, avg30 } = useSleepNight()
   const { notes, saveNote } = useWakeNotes(night?.date ?? null)
 
-  if (loading) {
-    return (
-      <div className="sv-loading">
-        <div className="spinner" />
-        <span>Schlafdaten laden…</span>
-      </div>
-    )
-  }
+  if (loading) return <LoadingSkeleton />
 
   if (error) {
     return (
@@ -69,7 +61,10 @@ export function SleepView() {
         {/* 1 — Header */}
         <Reveal i={0}>
           <div className="sv-hd">
-            <div className="nav">{SUMMARY.dateLabel}</div>
+            <div className="nav">
+              <span>{SUMMARY.dateLabel}</span>
+              <ThemeToggle theme={theme} onToggle={toggle} />
+            </div>
             <div className="range">
               {SUMMARY.startClock}
               <span className="arrow">→</span>
@@ -106,7 +101,6 @@ export function SleepView() {
               segments={SEGMENTS}
               span={SPAN}
               axisTicks={axisTicks}
-              onWakeClick={() => {}}
             />
           </div>
         </Reveal>
