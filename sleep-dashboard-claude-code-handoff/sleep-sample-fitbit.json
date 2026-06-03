@@ -1,0 +1,68 @@
+{
+  "_comment": "Echte Google-Health-API Response (1 Nacht), gefiltert auf platform=FITBIT. User-ID maskiert. Pro stage wurden createTime/updateTime weggelassen (im echten Response vorhanden, fuer den Parser irrelevant). Endpoint: GET /v4/users/me/dataTypes/sleep/dataPoints?pageSize=25",
+  "nextPageToken": "chcK...==",
+  "dataPoints": [
+    {
+      "name": "users/USER_ID/dataTypes/sleep/dataPoints/175367338356492360",
+      "dataSource": {
+        "device": {},
+        "recordingMethod": "DERIVED",
+        "platform": "FITBIT"
+      },
+      "sleep": {
+        "type": "STAGES",
+        "interval": {
+          "startTime": "2026-05-29T22:32:00Z",
+          "endTime": "2026-05-30T06:07:00Z",
+          "startUtcOffset": "7200s",
+          "endUtcOffset": "7200s"
+        },
+        "summary": {
+          "minutesInSleepPeriod": "455",
+          "minutesAsleep": "430",
+          "minutesAwake": "25",
+          "minutesAfterWakeUp": "0",
+          "minutesToFallAsleep": "0",
+          "stagesSummary": [
+            { "type": "AWAKE", "count": "4", "minutes": "25" },
+            { "type": "LIGHT", "count": "14", "minutes": "222" },
+            { "type": "DEEP",  "count": "6",  "minutes": "98" },
+            { "type": "REM",   "count": "5",  "minutes": "110" }
+          ]
+        },
+        "stages": [
+          { "type": "AWAKE", "startTime": "2026-05-29T22:32:00Z", "endTime": "2026-05-29T22:35:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-29T22:35:00Z", "endTime": "2026-05-29T22:43:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "DEEP",  "startTime": "2026-05-29T22:43:00Z", "endTime": "2026-05-29T23:00:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-29T23:00:00Z", "endTime": "2026-05-29T23:12:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "DEEP",  "startTime": "2026-05-29T23:12:00Z", "endTime": "2026-05-29T23:43:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "REM",   "startTime": "2026-05-29T23:43:00Z", "endTime": "2026-05-30T00:04:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T00:04:00Z", "endTime": "2026-05-30T00:18:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "DEEP",  "startTime": "2026-05-30T00:18:30Z", "endTime": "2026-05-30T00:20:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T00:20:00Z", "endTime": "2026-05-30T00:26:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "DEEP",  "startTime": "2026-05-30T00:26:00Z", "endTime": "2026-05-30T00:39:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T00:39:00Z", "endTime": "2026-05-30T00:44:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "DEEP",  "startTime": "2026-05-30T00:44:00Z", "endTime": "2026-05-30T01:14:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T01:14:30Z", "endTime": "2026-05-30T01:23:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "REM",   "startTime": "2026-05-30T01:23:30Z", "endTime": "2026-05-30T01:56:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T01:56:30Z", "endTime": "2026-05-30T02:24:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "DEEP",  "startTime": "2026-05-30T02:24:30Z", "endTime": "2026-05-30T02:29:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T02:29:30Z", "endTime": "2026-05-30T02:33:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "AWAKE", "startTime": "2026-05-30T02:33:00Z", "endTime": "2026-05-30T02:38:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T02:38:00Z", "endTime": "2026-05-30T03:07:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "REM",   "startTime": "2026-05-30T03:07:00Z", "endTime": "2026-05-30T03:42:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T03:42:30Z", "endTime": "2026-05-30T04:30:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "AWAKE", "startTime": "2026-05-30T04:30:00Z", "endTime": "2026-05-30T04:37:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T04:37:30Z", "endTime": "2026-05-30T04:50:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "AWAKE", "startTime": "2026-05-30T04:50:00Z", "endTime": "2026-05-30T04:59:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T04:59:30Z", "endTime": "2026-05-30T05:22:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "REM",   "startTime": "2026-05-30T05:22:30Z", "endTime": "2026-05-30T05:31:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T05:31:30Z", "endTime": "2026-05-30T05:54:30Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "REM",   "startTime": "2026-05-30T05:54:30Z", "endTime": "2026-05-30T06:06:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" },
+          { "type": "LIGHT", "startTime": "2026-05-30T06:06:00Z", "endTime": "2026-05-30T06:07:00Z", "startUtcOffset": "7200s", "endUtcOffset": "7200s" }
+        ],
+        "metadata": { "processed": true, "stagesStatus": "SUCCEEDED" }
+      }
+    }
+  ]
+}

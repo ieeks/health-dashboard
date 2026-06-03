@@ -1,0 +1,26 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // sleep/{date} — API-Daten, geschrieben nur vom Sync (Admin SDK)
+    match /health/main/sleep/{date} {
+      allow read: if true;
+      allow write: if false;
+
+      // Frontend darf nur das nightNote-Feld aktualisieren
+      allow update: if request.resource.data.diff(resource.data)
+                       .affectedKeys().hasOnly(['nightNote']);
+
+      // wakeNotes — Frontend schreibt Freitext-Kommentare zu Wachphasen
+      match /wakeNotes/{noteId} {
+        allow read:   if true;
+        allow write:  if true;
+      }
+    }
+
+    // Alles andere gesperrt
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

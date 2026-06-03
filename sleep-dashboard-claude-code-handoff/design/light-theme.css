@@ -1,0 +1,73 @@
+/* ═══════════════════════════════════════════════════════════════
+   Heller Modus — „Morgen-Review"
+   Überschreibt die Tokens scoped auf .screen.light. Gleiche Struktur,
+   gleiche Phasen-Logik (kühl→warm), nur auf heller Fläche.
+   ═══════════════════════════════════════════════════════════════ */
+.screen.light {
+  /* Flächen — kühl-helles Off-White, kein reines Grau */
+  --bg:            #e9edf5;
+  --bg-grad-top:   #f6f8fc;
+  --surface:       #ffffff;
+  --surface-line:  rgba(28,46,84,.11);
+  --surface-hi:    rgba(40,70,125,.045);
+
+  /* Text — tiefes Slate */
+  --ink:    #16203a;
+  --ink-2:  #586a88;
+  --ink-3:  #7a89a4;
+  --ink-dim:#9aa6bd;
+
+  /* Akzente — abgedunkelt für Kontrast auf Weiß */
+  --cyan:      #0a8fbf;
+  --cyan-soft: rgba(10,143,191,.14);
+  --warm:      #cf6a23;
+  --warm-deep: #b14620;
+  --warm-soft: rgba(207,106,35,.13);
+
+  /* Phasen kühl→warm, sattes Tageslicht */
+  --ph-deep:  #3a4cae;
+  --ph-light: #4486cf;
+  --ph-rem:   #12a7c9;
+  --ph-awake: #d2722a;
+
+  /* Tiefe — weicher, kühler Schatten statt schwarzem Loch */
+  --shadow-card: 0 1px 2px rgba(20,40,80,.05),
+                 0 10px 28px rgba(30,52,96,.09);
+  --shadow-soft: 0 4px 16px rgba(30,52,96,.10);
+}
+
+/* Sternenwäsche → warmer Dawn-Glow am oberen Rand */
+.screen.light::before {
+  height: 280px;
+  background:
+    radial-gradient(120% 90% at 50% -20%, rgba(255,206,150,.55) 0%, rgba(255,224,180,.18) 38%, transparent 64%),
+    radial-gradient(100% 70% at 85% 0%, rgba(150,200,255,.30) 0%, transparent 55%);
+  opacity: .9;
+}
+
+/* Tracks/Guides etwas dunkler einfärben, damit sie auf Weiß lesbar bleiben */
+.screen.light .lane .track::before { background: rgba(28,46,84,.08); }
+.screen.light .score-ring .ring-bg { stroke: rgba(28,46,84,.10); }
+.screen.light .dist .stack { background: rgba(28,46,84,.07); }
+.screen.light .drow .meter { background: rgba(28,46,84,.08); }
+.screen.light .hyp-legend .lg i,
+.screen.light .seg.deep,
+.screen.light .seg.light { box-shadow: none; }
+.screen.light .vit .r { border-bottom-color: rgba(28,46,84,.08); }
+
+/* REM behält dezenten Glow, aber kühler */
+.screen.light .seg.rem { box-shadow: 0 0 7px rgba(18,167,201,.30); }
+
+/* Wach-Block: warmer Akzent bleibt der eine Hotspot */
+.screen.light .seg.awake {
+  box-shadow: 0 0 0 1px rgba(207,106,35,.35), 0 1px 6px rgba(207,106,35,.35);
+}
+.screen.light .witem:hover { background: rgba(207,106,35,.07); border-color: rgba(207,106,35,.30); }
+
+/* Tab-Bar / Sheet auf hell */
+.screen.light .sheet { background: #ffffff; }
+.screen.light textarea,
+.screen.light .winline textarea { background: #f3f6fb; }
+
+/* Status-Bar-Glyphen kräftiger */
+.screen.light .statusbar { color: var(--ink); }

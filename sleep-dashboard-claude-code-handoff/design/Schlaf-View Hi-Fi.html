@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Schlaf-View — Hi-Fi Designvorlage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="sleep.css">
+<link rel="stylesheet" href="sleep-components.css">
+<link rel="stylesheet" href="overview.css">
+<link rel="stylesheet" href="light-theme.css">
+<style>
+  html, body { background: #0a0a0a; margin: 0; }
+  #root { width: 100vw; height: 100vh; }
+  /* Frame für Einzelkomponenten-Vergleich */
+  .frame {
+    width: 390px;
+    background: radial-gradient(120% 70% at 50% -10%, #0c111c 0%, #080b12 60%);
+    color: var(--ink); font-family: var(--font-body);
+    padding: 26px 20px; display: flex; flex-direction: column; justify-content: center; gap: 16px;
+    -webkit-font-smoothing: antialiased; min-height: 100%;
+  }
+  .frame .ftitle { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+  .frame .ftitle b { color: var(--cyan); }
+</style>
+</head>
+<body>
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100" height="100" fill="#080b12"/>
+    <circle cx="68" cy="32" r="13" fill="none" stroke="#2fd8ff" stroke-width="4"/>
+    <path d="M30 78 L30 68 L42 68 L42 58 L54 58 L54 72 L66 72 L66 62 L78 62" fill="none" stroke="#4d92d8" stroke-width="3" stroke-linejoin="round"/>
+    <circle cx="54" cy="58" r="3.5" fill="#e08a3c"/>
+  </svg>
+</template>
+
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="sv-shared.jsx"></script>
+<script type="text/babel" src="sv-hypnogram.jsx"></script>
+<script type="text/babel" src="sv-sleepview.jsx"></script>
+<script type="text/babel" src="sv-overview.jsx"></script>
+<script type="text/babel" src="sv-appv2.jsx"></script>
+
+<script type="text/babel">
+const { useState, useRef } = React;
+
+/* Einzelkomponenten-Frame */
+function Frame({ title, accent, children }) {
+  return (
+    <div className="frame">
+      <div className="ftitle">{title} <b>{accent}</b></div>
+      <div className="card">{children}</div>
+    </div>
+  );
+}
+
+/* Notiz-Demo: Bottom-Sheet (offen) */
+function SheetDemo() {
+  const draft = useRef(null);
+  const wake = window.SLEEP.WAKES.find((w) => w.time === '04:50');
+  return (
+    <div style={{ position: 'relative', width: 390, minHeight: '100%', overflow: 'hidden',
+      background: 'radial-gradient(120% 70% at 50% -10%, #0c111c 0%, #080b12 60%)' }}>
+      <div className="frame" style={{ minHeight: 'auto', justifyContent: 'flex-start' }}>
+        <div className="ftitle">Notiz · <b>Bottom-Sheet</b></div>
+        <div className="card">
+          <div className="card-h"><span className="t"><span style={{color:'var(--cyan)'}}>●</span> Wachphasen</span><span className="meta">antippen für Notiz</span></div>
+          <WakeList notes={{ '04:50': '' }} mode="sheet" openKey={null} onOpen={()=>{}} onSave={()=>{}} onCancel={()=>{}} draftRef={draft} />
+        </div>
+      </div>
+      <Sheet wake={wake} note="" onClose={()=>{}} onSave={()=>{}} draftRef={draft} />
+    </div>
+  );
+}
+
+/* Notiz-Demo: Inline-Expand (offen) */
+function InlineDemo() {
+  const draft = useRef(null);
+  return (
+    <div className="frame" style={{ justifyContent: 'flex-start' }}>
+      <div className="ftitle">Notiz · <b>Inline-Expand</b></div>
+      <div className="card">
+        <div className="card-h"><span className="t"><span style={{color:'var(--cyan)'}}>●</span> Wachphasen</span><span className="meta">antippen für Notiz</span></div>
+        <WakeList notes={{ '04:50': 'Kind geweint – kurz aufgestanden' }} mode="inline" openKey={'02:33'}
+          onOpen={()=>{}} onSave={()=>{}} onCancel={()=>{}} draftRef={draft} />
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <DesignCanvas>
+      <DCSection id="v2" title="V2 · Home-Übersicht als Hub" subtitle="Navigierbar — Schlaf-Brücke oder Schlaf-Tab öffnet die Detail-View, Back kehrt zurück">
+        <DCArtboard id="v2-dark" label="V2 · Dark — antippbar (Brücke → Detail)" width={390} height={844}>
+          <AppV2 theme="dark" />
+        </DCArtboard>
+        <DCArtboard id="v2-light" label="V2 · Light — antippbar" width={390} height={844}>
+          <AppV2 theme="light" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="light" title="Heller Modus — Morgen-Review" subtitle="Gleiche V1, helle Fläche · Dawn-Glow statt Sternenwäsche">
+        <DCArtboard id="light-sleep" label="Light · Schlaf-View V1" width={390} height={1240}>
+          <SleepView hypno="A" score="B" noteMode="inline" theme="light" />
+        </DCArtboard>
+        <DCArtboard id="light-ov" label="Light · Übersicht" width={390} height={1200}>
+          <Overview onOpenSleep={()=>{}} theme="light" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="v1" title="Finale V1" subtitle="Lanes-Hypnogramm + Effizienz-Ring + Inline-Notiz">
+        <DCArtboard id="final" label="V1 · Schlaf-View" width={390} height={1240}>
+          <SleepView hypno="A" score="B" noteMode="inline" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="full" title="Schlaf-View — komplett" subtitle="Zwei ausgearbeitete Richtungen, voll antippbar">
+        <DCArtboard id="rec" label="Empfohlen · Lanes + Effizienz-Zahl + Sheet" width={390} height={1240}>
+          <SleepView hypno="A" score="A" noteMode="sheet" />
+        </DCArtboard>
+        <DCArtboard id="alt" label="Alternative · Stufenlinie + Ring + Inline" width={390} height={1240}>
+          <SleepView hypno="B" score="B" noteMode="inline" />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="hypno" title="Hypnogramm — A / B" subtitle="Die Schlüssel-Visualisierung, 29 echte Segmente">
+        <DCArtboard id="lanes" label="A · Phasen-Blöcke auf 4 Lanes" width={390} height={360}>
+          <Frame title="Hypnogramm" accent="Lanes (A)"><HypnoLanes onWake={()=>{}} /></Frame>
+        </DCArtboard>
+        <DCArtboard id="step" label="B · Durchgehende Stufenlinie / Area" width={390} height={360}>
+          <Frame title="Hypnogramm" accent="Stufenlinie (B)"><HypnoStep onWake={()=>{}} /></Frame>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="score" title="Score-Card — A / B" subtitle="Ehrliche Effizienz, kein Fake-Score">
+        <DCArtboard id="num" label="A · Große Effizienz-Zahl" width={390} height={300}>
+          <Frame title="Score" accent="Zahl (A)"><div className="card-h"><span className="t">Übersicht</span><span className="meta">FITBIT</span></div><ScoreNum /></Frame>
+        </DCArtboard>
+        <DCArtboard id="ring" label="B · Ring / Arc" width={390} height={300}>
+          <Frame title="Score" accent="Ring (B)"><div className="card-h"><span className="t">Übersicht</span><span className="meta">FITBIT</span></div><ScoreRing /></Frame>
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="note" title="Notiz-Eingabe — Pattern" subtitle="Bottom-Sheet vs. Inline-Expand">
+        <DCArtboard id="sheet" label="Bottom-Sheet (slide-up)" width={390} height={620}>
+          <SheetDemo />
+        </DCArtboard>
+        <DCArtboard id="inline" label="Inline-Expand" width={390} height={560}>
+          <InlineDemo />
+        </DCArtboard>
+      </DCSection>
+
+      <DCSection id="home" title="Aktivität-Übersicht" subtitle="Home-Screen · Brücke zur Schlaf-View">
+        <DCArtboard id="ov" label="Übersicht (Home)" width={390} height={1200}>
+          <Overview onOpenSleep={()=>{}} />
+        </DCArtboard>
+      </DCSection>
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
