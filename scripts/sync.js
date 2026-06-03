@@ -200,7 +200,7 @@ async function fetchActivityType(accessToken, dataType) {
     console.log(`  ✓ ${dataType}: ${points.length} DataPoints`)
     // Log first point structure to validate field names (first run only)
     if (points.length > 0) {
-      console.log(`    sample: ${JSON.stringify(points[0]).slice(0, 300)}`)
+      console.log(`    sample: ${JSON.stringify(points[0]).slice(0, 600)}`)
     }
     return points
   } catch (err) {
