@@ -29,11 +29,21 @@
 - **`SleepView.jsx`** — `onBack`-Prop + Back-Button-Style; Props statt Hook (Daten kommen von App.jsx)
 - **`archive/`** — Design-Handoff-Dateien verschoben (sleep-dashboard-claude-code-handoff)
 
+### Fixed (Activity Sync — iterativ ermittelt)
+- **HTTP 400 bei allen Activity-Typen** — Ursache: Filter `interval.end_time >= "..."` gilt nur für Sleep.
+  Fix: Activity-Endpunkte ohne Filter, Datumsfilterung client-seitig.
+- **Kein Daily-Eintrag trotz DataPoints** — Ursache: `p.interval?.endTime` falsch; Struktur ist
+  `p[dataType].interval.endTime`. Fix: `p[dataType]?.interval?.endTime` als primärer Pfad.
+- **`extractValue` lieferte null** — Ursache: Werte sind Strings, nicht Numbers.
+  Bestätigte Felder: `steps.count = "2"`, `distance.millimeters = "1503"` (mm → m via /1000).
+
 ### Notes
-- Activity-DataType-Strings sind Näherungswerte (API hat minimale Docs); tatsächliche Feldnamen
-  werden beim ersten Sync-Lauf mit den Activity-Scopes in den Logs sichtbar
-- Scopes für Aktivität sind bereits im OAuth-Client konfiguriert; falls Refresh-Token
-  vor deren Hinzufügung erstellt wurde → einmalig `node scripts/get-refresh-token.js`
+- Verfügbare Activity-Typen via Google Health Connect (Fitbit Air): **nur `steps` + `distance`**.
+  Kalorien, Herz, HRV, SpO₂ etc. synct Fitbit nicht in die Health Connect API.
+  Diese Werte zeigen `—` im Dashboard bis eine andere Datenquelle verfügbar ist.
+- Datenquelle für steps/distance: `HEALTH_KIT` (iPhone) — die Google Health Connect API
+  aggregiert alle verbundenen Quellen; iPhone-Schritte sind valide Daten.
+- Scopes für Aktivität bereits im OAuth-Client konfiguriert.
 
 ---
 

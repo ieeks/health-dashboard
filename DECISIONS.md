@@ -109,6 +109,31 @@ Sofortige Navigation ohne Netzwerk-Latenz ist die bessere UX.
 
 ---
 
+## Activity-Datenquelle: HEALTH_KIT statt FITBIT
+
+**Entscheidung:** Für Activity-Daten (steps, distance) kein Plattform-Filter — alle Quellen akzeptiert.
+
+**Warum:** Fitbit synct Aktivitätsdaten nicht in die Google Health Connect REST API.
+Verfügbare Datenquelle ist `HEALTH_KIT` (iPhone). Kein Filter bedeutet: egal woher, Hauptsache Daten.
+Für Sleep bleibt der FITBIT-Filter weil HealthKit nur `CLASSIC`-Stages liefert (kein STAGES-Modus).
+
+**Konsequenz:** Steps/Distanz kommen vom iPhone. Kalorien, Herz, SpO₂ etc. sind nicht verfügbar
+(Fitbit exposiert sie nicht via Health Connect API) — zeigen `—` im Dashboard.
+
+---
+
+## Activity DataPoint-Struktur (bestätigt 2026-06-03)
+
+**Befund:** Werte leben in `dataPoint[type].fieldName`, nicht in `dataPoint.fieldName`.
+Werte sind Strings, nicht Numbers. Einheiten:
+- `steps.count` = String (Anzahl Schritte)
+- `distance.millimeters` = String → /1000 für Meter
+
+**Warum relevant:** `extractValue()` und der Datumsfilter in `aggregateActivity()` müssen
+`p[dataType]?.interval?.endTime` lesen, nicht `p.interval?.endTime`.
+
+---
+
 ## V2 Navigation: transform statt left
 
 **Entscheidung:** Slide-Navigation via `transform: translateX(-50%)` auf einem 200%-breiten Track.

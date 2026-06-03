@@ -18,6 +18,7 @@ Gehostet auf GitHub Pages, Daten gecacht in Firestore.
 
 **Übersicht (Home/Hub)**
 - Tagesziele: Schritte / Active Zone Min / Kalorien als konzentrische Ringe
+  *(Schritte + Distanz live via iPhone/HealthKit; Kalorien/Herz/Vitalwerte zeigen `—` — Fitbit synct diese nicht in Health Connect)*
 - Schlaf-Brücke: Mini-Hypnogramm + Stats, klickbar → Detail
 - Metrik-Karten: Schrittzahl, Strecke, Kalorien, AZM mit Sparklines
 - Herz: Ruhepuls + HRV, 7-Tage Trendlinien
