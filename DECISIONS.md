@@ -13,11 +13,10 @@ Refresh-Token läuft (solange App im Testing-Modus) nach 7 Tagen ab.
 Nach Verifizierung durch Google läuft er nicht mehr ab.
 
 **Konsequenz:** Bis Verifizierung: roter Workflow = Re-Auth nötig.
-`GOOGLE_REFRESH_TOKEN` Secret manuell aktualisieren.
+`GOOGLE_REFRESH_TOKEN` Secret via `node scripts/get-refresh-token.js` aktualisieren.
 
 **Nicht gebaut:** Plan-B Reconnect-Endpoint (Firebase Function).
 Begründung: Overhead zu hoch für 7-Tage-Fenster, App-Verifizierung ist beantragt.
-Wird gebaut falls Verifizierung scheitert.
 
 ---
 
@@ -25,7 +24,7 @@ Wird gebaut falls Verifizierung scheitert.
 
 **Entscheidung:** Effizienz-Proxy = `minutesAsleep / minutesInSleepPeriod`, klar als Proxy gelabelt.
 
-**Warum:** Google Health API liefert keinen Score, keine `efficiency`-Feld.
+**Warum:** Google Health API liefert kein `efficiency`-Feld und keinen Score.
 Selbst gerechneter Score wäre irreführend wenn nicht klar kommuniziert.
 
 ---
@@ -81,3 +80,39 @@ App-Login würde Komplexität ohne Benefit hinzufügen.
 
 **Sicherung:** Write ist gesperrt (nur Admin SDK / Sync). `wakeNotes` write erlaubt
 weil das Gerät des Users das einzige ist das die Seite benutzt.
+
+---
+
+## Activity Sync: Graceful Failure bei unbekannten DataTypes
+
+**Entscheidung:** Jeder Activity-DataType wird einzeln abgefragt; HTTP 400/403/404 → skip, kein Abbruch.
+
+**Warum:** Die Google Health Connect REST API v4 hat minimale öffentliche Dokumentation.
+Die korrekten DataType-Strings (z.B. `calories` vs. `calories.expended`) sind unsicher.
+Ein harter Fehler würde den gesamten Sync abbrechen und auch Sleep-Daten gefährden.
+Graceful-Mode ermöglicht iterative Validierung: Logs zeigen welche Strings die API akzeptiert.
+
+**Konsequenz:** Beim ersten Sync-Lauf mit Activity-Scopes in den Logs sichtbar welche
+DataTypes verfügbar sind. ACTIVITY_TYPES-Liste in `sync.js` danach ggf. bereinigen.
+
+---
+
+## Tag-Navigation: Client-seitig, einmaliger Load
+
+**Entscheidung:** Alle 30 Nächte werden beim Start einmal aus Firestore geladen;
+Navigation (‹/›) ist rein client-seitig über einen Index-State in `App.jsx`.
+
+**Warum:** Alternativen wären lazy loading per Datum oder Echtzeit-Listener.
+30 Nächte × ~2 KB/Dokument = ~60 KB — vernachlässigbar.
+Sofortige Navigation ohne Netzwerk-Latenz ist die bessere UX.
+`App.jsx` als einzige Datenquelle (kein doppelter Firestore-Aufruf in Overview + Sleep).
+
+---
+
+## V2 Navigation: transform statt left
+
+**Entscheidung:** Slide-Navigation via `transform: translateX(-50%)` auf einem 200%-breiten Track.
+
+**Warum:** Design-Prototyp verwendete pixel-`left` wegen eines Browser-Bugs im Babel-Standalone-Setup.
+In React/echtem Browser ist CSS `transform` performanter (GPU-composited, kein Reflow).
+`translateX(-50%)` = eine Pane-Breite nach links (Track = 200%, jede Pane = 50%).

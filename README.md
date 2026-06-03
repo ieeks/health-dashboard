@@ -1,6 +1,6 @@
 # Health Dashboard
 
-Persönliches Schlaf-Dashboard für Fitbit Air Daten via Google Health API.
+Persönliches Gesundheits-Dashboard für Fitbit Air Daten via Google Health API.
 Gehostet auf GitHub Pages, Daten gecacht in Firestore.
 
 **Live:** [manuel-app.dev/health-dashboard](http://manuel-app.dev/health-dashboard/)
@@ -8,21 +8,31 @@ Gehostet auf GitHub Pages, Daten gecacht in Firestore.
 ## Stack
 
 - **Frontend:** React + Vite → GitHub Pages
-- **Datenquelle:** Google Health API (Fitbit Air, `googlehealth.sleep.readonly`)
-- **Cache:** Firebase Firestore (`health/main/sleep/{YYYY-MM-DD}`)
+- **Datenquelle:** Google Health API v4 (Fitbit Air)
+- **Cache:** Firebase Firestore (`health/main/sleep/` + `health/main/daily/`)
 - **Sync:** GitHub Action (cron, täglich 08:00 Wien)
 
-## V1 Scope
+## Features
 
-Schlaf-View vollständig:
+### V2 (aktuell)
 
-- Effizienz-Ring (minutesAsleep / minutesInSleepPeriod)
+**Übersicht (Home/Hub)**
+- Tagesziele: Schritte / Active Zone Min / Kalorien als konzentrische Ringe
+- Schlaf-Brücke: Mini-Hypnogramm + Stats, klickbar → Detail
+- Metrik-Karten: Schrittzahl, Strecke, Kalorien, AZM mit Sparklines
+- Herz: Ruhepuls + HRV, 7-Tage Trendlinien
+- Vitalwerte: SpO₂, Atemfrequenz, Hauttemperatur-Abweichung
+
+**Schlaf-Detail**
+- Effizienz-Ring (`minutesAsleep / minutesInSleepPeriod`)
 - Hypnogramm (4 Lanes: Tief / Leicht / REM / Wach)
-- Wachphasen mit Freitext-Kommentar
+- Wachphasen mit Freitext-Kommentar (Firestore)
 - Phasen-Verteilung vs. 30-Tage-Schnitt
-- Dark Mode (Default) + Light Mode (Morgen-Review)
+- Tag-Navigation: ‹ 1/30 › durch alle gespeicherten Nächte blättern
 
-V2 (später): Aktivität, Herz, Vitalwerte.
+**App**
+- Slide-Navigation Home ↔ Schlaf-Detail
+- Dark Mode (Default) + Light Mode (Morgen-Review)
 
 ## Lokale Entwicklung
 
@@ -52,9 +62,19 @@ Einmalig im GitHub Repo → Settings → Secrets and Variables → Actions:
 | `VITE_FIREBASE_APP_ID` | " |
 | `GOOGLE_CLIENT_ID` | Google Cloud Console → OAuth 2.0 Client |
 | `GOOGLE_CLIENT_SECRET` | " |
-| `GOOGLE_REFRESH_TOKEN` | Einmalig via OAuth-Flow generiert |
+| `GOOGLE_REFRESH_TOKEN` | Einmalig via `node scripts/get-refresh-token.js` |
 | `FIREBASE_PROJECT_ID` | `health-dashboard-ieeks` |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Console → Service Accounts → JSON generieren |
+
+## OAuth Scopes
+
+Alle drei Scopes müssen beim OAuth-Flow autorisiert sein:
+
+| Scope | Daten |
+|-------|-------|
+| `googlehealth.sleep.readonly` | Schlafphasen, Effizienz |
+| `googlehealth.activity_and_fitness.readonly` | Schritte, Kalorien, AZM, Distanz, Ruhepuls, HRV |
+| `googlehealth.health_metrics_and_measurements.readonly` | SpO₂, Atemfrequenz, Hauttemperatur |
 
 ## Sync manuell auslösen
 
@@ -62,32 +82,40 @@ Einmalig im GitHub Repo → Settings → Secrets and Variables → Actions:
 # Via GitHub CLI
 gh workflow run sync.yml
 
-# Lokal (mit .env.local befüllt)
+# Lokal (mit .env.local befüllt + GOOGLE_* gesetzt)
 node scripts/sync.js
 ```
 
 ## Firestore Schema
 
 ```
-health/main/sleep/{YYYY-MM-DD}        ← API-Daten (Sync schreibt, nie Notizen überschreiben)
+health/main/sleep/{YYYY-MM-DD}        ← Schlafdaten (Sync schreibt)
   └── wakeNotes/{stageStartTime}      ← { text, createdAt, updatedAt } (Frontend schreibt)
       nightNote: string               ← Freitext ganze Nacht (Frontend schreibt)
+
+health/main/daily/{YYYY-MM-DD}        ← Aktivitätsdaten (Sync schreibt)
+  steps, calories, azm, distanceM     ← Tageswerte
+  restingHr, hrv                      ← Herz (letzter Wert des Tages)
+  restingHr7days[], hrv7days[]        ← 7-Tage-Arrays für Trend-Polylinien
+  spo2, respiratoryRate               ← Nächtliche Vitalwerte
+  skinTempDeviation                   ← vs. Baseline (°C)
 ```
 
-Tagesschlüssel = lokales Datum der `interval.endTime` (Aufwach-Tag, UTC + Offset).
+Schlüssel = lokales Datum der `interval.endTime` (Aufwach-Tag, UTC + Offset).
 
 ## Zeitzonen
 
 Alle API-Zeiten sind UTC (`Z`) + separater `startUtcOffset`/`endUtcOffset` in Sekunden.
 Lokale Wandzeit = UTC + Offset. Wien = +7200s (CEST) / +3600s (CET).
 
-> Einmalig verifizieren: bekannte Schlafenszeit gegen API-Response prüfen
-> (22:32 lokal = 20:32Z bei +7200s → Offset addieren).
-
 ## Token-Situation (bis App-Verifizierung durch ist)
 
 App ist in Google-Verifizierung. Solange: Refresh-Token läuft nach 7 Tagen ab (`invalid_grant`).
-Der Sync schlägt dann fehl (roter Workflow) — manuell Re-Auth durchführen und neuen
-`GOOGLE_REFRESH_TOKEN` als Secret setzen.
+Der Sync schlägt dann fehl (roter Workflow) — manuell Re-Auth durchführen:
 
-Nach erfolgreicher Verifizierung entfällt das.
+```bash
+node scripts/get-refresh-token.js
+```
+
+Das Script öffnet den Browser, startet einen lokalen OAuth-Server und schreibt
+den neuen `GOOGLE_REFRESH_TOKEN` direkt als GitHub Secret.
