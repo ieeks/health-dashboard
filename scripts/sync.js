@@ -235,9 +235,9 @@ function aggregateActivity(pointsByType, dateKey) {
     dataType = TYPE_ALIASES[dataType] || dataType
     if (!points || points.length === 0) continue
 
-    // Filter to target date (use endTime)
+    // Filter to target date — endTime lives inside p[dataType].interval, not p.interval
     const dayPoints = points.filter(p => {
-      const et = p.interval?.endTime || p.endTime
+      const et = p[dataType]?.interval?.endTime || p.interval?.endTime || p.endTime
       if (!et) return false
       return et.startsWith(dateKey) || localDateKey(et, 0) === dateKey
     })
@@ -298,7 +298,7 @@ function build7DayTrends(pointsByType) {
     // Group by date, take last value per day
     const byDate = {}
     for (const p of points) {
-      const et = p.interval?.endTime || p.endTime
+      const et = p[apiType]?.interval?.endTime || p.interval?.endTime || p.endTime
       if (!et) continue
       const date = et.slice(0, 10)
       const val = extractValue(p, apiType)
