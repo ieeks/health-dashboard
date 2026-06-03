@@ -354,6 +354,33 @@
 }
 .sv-error { color: var(--warm); }
 
+/* ── Date Navigation ────────────────────────────────────────── */
+.sv-date-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 4px;
+}
+.sv-date-label {
+  font-size: 13px; color: var(--ink-2); font-weight: 500;
+}
+.sv-nav-arrows {
+  display: flex; align-items: center; gap: 4px;
+}
+.sv-nav-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 8px;
+  background: var(--surface-hi); border: 1px solid var(--surface-line);
+  color: var(--ink-2); cursor: pointer;
+  transition: color .15s, background .15s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.sv-nav-btn:hover:not(:disabled) { color: var(--ink); background: var(--surface-line); }
+.sv-nav-btn:disabled { opacity: .3; cursor: default; }
+.sv-nav-idx {
+  font-family: var(--font-mono); font-size: 11px;
+  color: var(--ink-dim); min-width: 36px; text-align: center;
+}
+
 /* ── Back Button (V2 nav) ───────────────────────────────────── */
 .sv-back {
   display: flex; align-items: center; gap: 5px;

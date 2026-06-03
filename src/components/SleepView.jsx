@@ -1,4 +1,3 @@
-import { useSleepNight } from '../hooks/useSleepNight'
 import { useWakeNotes } from '../hooks/useWakeNotes'
 import { useTheme } from '../hooks/useTheme'
 import { fmtHM } from '../lib/sleepParser'
@@ -28,9 +27,8 @@ function Reveal({ i = 0, children }) {
   )
 }
 
-export function SleepView({ onBack }) {
+export function SleepView({ loading, error, night, avg30, nav, onBack }) {
   const { theme, toggle } = useTheme()
-  const { loading, error, night, avg30 } = useSleepNight()
   const { notes, saveNote } = useWakeNotes(night?.date ?? null)
 
   if (loading) return <LoadingSkeleton />
@@ -79,6 +77,36 @@ export function SleepView({ onBack }) {
               {SUMMARY.startClock}
               <span className="arrow">→</span>
               {SUMMARY.endClock}
+            </div>
+            <div className="sv-date-nav">
+              <span className="sv-date-label">{SUMMARY.dateLabel}</span>
+              {nav && (
+                <div className="sv-nav-arrows">
+                  <button
+                    className="sv-nav-btn"
+                    onClick={nav.goPrev}
+                    disabled={!nav.canPrev}
+                    aria-label="Vorherige Nacht"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="9,2 4,7 9,12" />
+                    </svg>
+                  </button>
+                  <span className="sv-nav-idx">{nav.nightIdx + 1} / {nav.total}</span>
+                  <button
+                    className="sv-nav-btn"
+                    onClick={nav.goNext}
+                    disabled={!nav.canNext}
+                    aria-label="Nächste Nacht"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor"
+                      strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="5,2 10,7 5,12" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
             <div className="sub">
               <b>{fmtHM(SUMMARY.asleepMin)}</b>

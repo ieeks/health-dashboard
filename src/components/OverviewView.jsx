@@ -1,5 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
-import { useSleepNight } from '../hooks/useSleepNight'
+import { useEffect, useState } from 'react'
 import { useActivityData } from '../hooks/useActivityData'
 import { fmtHM } from '../lib/sleepParser'
 
@@ -308,8 +307,7 @@ function TabBar({ active, onHome, onSleep }) {
 }
 
 // ── Overview View (main export) ───────────────────────────────────────────────
-export function OverviewView({ onOpenSleep }) {
-  const { night } = useSleepNight()
+export function OverviewView({ loading, night, nav, onOpenSleep }) {
   const { daily }  = useActivityData()
 
   // Extract activity values (null = no data yet)
@@ -398,8 +396,20 @@ export function OverviewView({ onOpenSleep }) {
         <Reveal i={2}>
           <div className="card">
             <div className="card-h">
-              <span className="t"><span className="accent">●</span> Schlaf · letzte Nacht</span>
-              <span className="meta" style={{ cursor: 'pointer' }} onClick={onOpenSleep}>Detail →</span>
+              <span className="t"><span className="accent">●</span> Schlaf · {night?.SUMMARY?.dateLabel ?? 'letzte Nacht'}</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                {nav && nav.total > 1 && (
+                  <div className="sv-nav-arrows">
+                    <button className="sv-nav-btn" onClick={nav.goPrev} disabled={!nav.canPrev} aria-label="Vorherige Nacht">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="9,2 4,7 9,12" /></svg>
+                    </button>
+                    <button className="sv-nav-btn" onClick={nav.goNext} disabled={!nav.canNext} aria-label="Nächste Nacht">
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="5,2 10,7 5,12" /></svg>
+                    </button>
+                  </div>
+                )}
+                <span className="meta" style={{ cursor: 'pointer' }} onClick={onOpenSleep}>Detail →</span>
+              </div>
             </div>
             <SleepBridge night={night} onClick={onOpenSleep} />
           </div>
