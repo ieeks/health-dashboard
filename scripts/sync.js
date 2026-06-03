@@ -36,28 +36,34 @@ const RETRY_DELAY_MS = 2000
 // the Android SDK reference. Failures on individual types are logged + skipped.
 // Known dataType strings to attempt. Alternatives are listed for uncertain names
 // (the correct one will be confirmed at first run; failures are logged + skipped).
+// DataType strings confirmed by live API responses.
+// 400 "Invalid data type ID" = wrong name; 403 = scope missing; 404 = not found.
 const ACTIVITY_TYPES = [
+  // ✓ Confirmed working
   'steps',
-  'calories',
-  'calories.expended',    // alternative — API docs unclear
-  'active_zone_minutes',
-  'active_minutes',       // alternative name used by some Fitbit endpoints
   'distance',
-  'distance.delta',       // alternative
+  // Calories variants (Health Connect uses total vs active)
+  'total_calories_burned',
+  'active_calories_burned',
+  // Heart rate
+  'heart_rate',
   'resting_heart_rate',
+  // HRV
   'heart_rate_variability_rmssd',
-  'hrv_rmssd',            // alternative shorter form
+  // Vitals (needs health_metrics scope)
   'oxygen_saturation',
   'respiratory_rate',
+  'skin_temperature',            // without _deviation
   'skin_temperature_deviation',
+  // Activity minutes
+  'exercise_session',
+  'active_zone_minutes',
 ]
 
-// Which types map to the same Firestore field (only first successful one wins)
+// Alias → canonical Firestore field (first successful write wins)
 const TYPE_ALIASES = {
-  'calories.expended': 'calories',
-  'active_minutes':    'active_zone_minutes',
-  'distance.delta':    'distance',
-  'hrv_rmssd':         'heart_rate_variability_rmssd',
+  'active_calories_burned': 'total_calories_burned',
+  'heart_rate':             'resting_heart_rate',      // fallback if resting not available
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -192,6 +198,10 @@ async function fetchActivityType(accessToken, dataType) {
     const data = await res.json()
     const points = data.dataPoints || []
     console.log(`  ✓ ${dataType}: ${points.length} DataPoints`)
+    // Log first point structure to validate field names (first run only)
+    if (points.length > 0) {
+      console.log(`    sample: ${JSON.stringify(points[0]).slice(0, 300)}`)
+    }
     return points
   } catch (err) {
     console.warn(`  ⚠ ${dataType}: Netzwerkfehler — ${err.message}`)
@@ -264,15 +274,19 @@ function aggregateActivity(pointsByType, dateKey) {
 
     // Map API type → Firestore field name
     const fieldMap = {
-      'steps':                       'steps',
-      'calories':                    'calories',
-      'active_zone_minutes':         'azm',
-      'distance':                    'distanceM',
-      'resting_heart_rate':          'restingHr',
-      'heart_rate_variability_rmssd':'hrv',
-      'oxygen_saturation':           'spo2',
-      'respiratory_rate':            'respiratoryRate',
-      'skin_temperature_deviation':  'skinTempDeviation',
+      'steps':                        'steps',
+      'distance':                     'distanceM',
+      'total_calories_burned':        'calories',
+      'active_calories_burned':       'calories',
+      'heart_rate':                   'restingHr',
+      'resting_heart_rate':           'restingHr',
+      'heart_rate_variability_rmssd': 'hrv',
+      'oxygen_saturation':            'spo2',
+      'respiratory_rate':             'respiratoryRate',
+      'skin_temperature':             'skinTempDeviation',
+      'skin_temperature_deviation':   'skinTempDeviation',
+      'active_zone_minutes':          'azm',
+      'exercise_session':             'azm',
     }
 
     const field = fieldMap[dataType] || dataType
