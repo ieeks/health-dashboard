@@ -200,7 +200,11 @@ async function fetchActivityType(accessToken, dataType) {
     console.log(`  ✓ ${dataType}: ${points.length} DataPoints`)
     // Log first point structure to validate field names (first run only)
     if (points.length > 0) {
-      console.log(`    sample: ${JSON.stringify(points[0]).slice(0, 600)}`)
+      // Log the type-specific sub-object (skip interval/civil times to see value fields)
+      const p = points[0]
+      const typeData = p[dataType] || p
+      const { interval, civilStartTime, civilEndTime, ...rest } = typeData
+      console.log(`    platform: ${p.dataSource?.platform}, fields: ${JSON.stringify(rest)}`)
     }
     return points
   } catch (err) {
